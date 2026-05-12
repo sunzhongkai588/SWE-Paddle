@@ -15,8 +15,8 @@ PROXY = "http://agent.baidu.com:8891"
 os.environ["https_proxy"] = PROXY
 os.environ["http_proxy"] = PROXY
 
-# Disable SSL verification for proxy
-ssl._create_default_https_context = ssl._create_unverified_context
+if os.environ.get("SSL_NO_VERIFY"):
+    ssl._create_default_https_context = ssl._create_unverified_context
 
 # Hackathon 9th: 个人挑战赛 issues
 HACKATHON_9TH_ISSUES = {

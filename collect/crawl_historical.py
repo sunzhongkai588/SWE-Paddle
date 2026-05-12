@@ -17,7 +17,8 @@ import time
 import urllib.request
 from typing import Optional
 
-ssl._create_default_https_context = ssl._create_unverified_context
+if os.environ.get("SSL_NO_VERIFY"):
+    ssl._create_default_https_context = ssl._create_unverified_context
 
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
 PROXY = os.environ.get("https_proxy", "http://agent.baidu.com:8891")

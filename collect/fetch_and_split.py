@@ -19,7 +19,8 @@ from urllib.parse import quote
 PROXY = "http://agent.baidu.com:8891"
 os.environ["https_proxy"] = PROXY
 os.environ["http_proxy"] = PROXY
-ssl._create_default_https_context = ssl._create_unverified_context
+if os.environ.get("SSL_NO_VERIFY"):
+    ssl._create_default_https_context = ssl._create_unverified_context
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATASET_DIR = os.path.join(REPO_ROOT, "dataset")

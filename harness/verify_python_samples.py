@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Direct F2P/P2P verification for pure-Python samples (no Docker needed).
+"""WARNING: Debug/smoke tool only — results are NOT formal verification.
+
+Direct F2P/P2P smoke check for pure-Python samples (no Docker needed).
+Uses installed Paddle as Fix-state proxy. NOT semantically equivalent to
+the full harness (base_commit + test_patch + code_patch).
 
 Strategy: Selective file revert
 - Installed Paddle 3.3.1 already has all fixes (Fix state baseline)
@@ -18,8 +22,8 @@ from pathlib import Path
 
 PROJ_ROOT = Path(__file__).resolve().parent.parent
 PADDLE_CLONE = PROJ_ROOT / "harness" / "Paddle"
-DATASET = PROJ_ROOT / "dataset" / "instances_6to9.jsonl"
-OUTPUT = PROJ_ROOT / "dataset" / "pilot_python_verified.jsonl"
+DATASET = PROJ_ROOT / "dataset" / "instances.jsonl"
+OUTPUT = PROJ_ROOT / "dataset" / "debug_python_smoke.jsonl"
 PROXY = "http://agent.baidu.com:8891"
 STABILITY_RUNS = 3
 PYTHON_PILOT_PRS = [63302, 64519, 63728]
@@ -314,6 +318,7 @@ def main():
     # Write output
     with open(OUTPUT, "w") as f:
         for r in results:
+            r["verification_level"] = "smoke_only"
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
     print(f"\n{'='*60}")

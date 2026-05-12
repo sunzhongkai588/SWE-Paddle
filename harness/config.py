@@ -14,9 +14,9 @@ PADDLE_CLONE_DIR = HARNESS_DIR / "Paddle"
 PADDLE_REPO_URL = "https://github.com/PaddlePaddle/Paddle.git"
 
 # Dataset files
-TRACK_A_FILE = DATASET_DIR / "track_a_bugfix_6to9.jsonl"
-TRACK_C_FILE = DATASET_DIR / "track_c_feature_6to9.jsonl"
-INSTANCES_FILE = DATASET_DIR / "instances_6to9.jsonl"
+TRACK_A_FILE = DATASET_DIR / "track_a_bugfix.jsonl"
+TRACK_C_FILE = DATASET_DIR / "track_c_feature.jsonl"
+INSTANCES_FILE = DATASET_DIR / "instances.jsonl"
 
 # Output files
 SMOKE_OUTPUT = DATASET_DIR / "pilot_smoke_nodeids.jsonl"
