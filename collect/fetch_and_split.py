@@ -21,7 +21,8 @@ os.environ["https_proxy"] = PROXY
 os.environ["http_proxy"] = PROXY
 ssl._create_default_https_context = ssl._create_unverified_context
 
-DATASET_DIR = "/home/sunzhongkai/disk/paddleswe/dataset"
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATASET_DIR = os.path.join(REPO_ROOT, "dataset")
 
 # Test file path patterns for Paddle ecosystem
 TEST_PATH_PATTERNS = [

@@ -137,15 +137,18 @@ def main():
     for repo, count in sorted(repo_counts.items(), key=lambda x: -x[1]):
         print(f"  {repo}: {count}", file=sys.stderr)
 
+    REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    DATASET_DIR = os.path.join(REPO_ROOT, "dataset")
+
     # Output all tasks as JSONL
-    output_path = "/home/sunzhongkai/disk/paddleswe/dataset/tasks_9th.jsonl"
+    output_path = os.path.join(DATASET_DIR, "tasks_9th.jsonl")
     with open(output_path, "w") as f:
         for t in all_tasks:
             f.write(json.dumps(t, ensure_ascii=False) + "\n")
     print(f"\nWritten {len(all_tasks)} tasks to {output_path}", file=sys.stderr)
 
     # Also output filtered completed tasks
-    output_path_completed = "/home/sunzhongkai/disk/paddleswe/dataset/tasks_9th_completed.jsonl"
+    output_path_completed = os.path.join(DATASET_DIR, "tasks_9th_completed.jsonl")
     with open(output_path_completed, "w") as f:
         for t in with_pr:
             f.write(json.dumps(t, ensure_ascii=False) + "\n")

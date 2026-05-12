@@ -20,7 +20,8 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
 PROXY = os.environ.get("https_proxy", "http://agent.baidu.com:8891")
-DATASET_DIR = "/home/sunzhongkai/disk/paddleswe/dataset"
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATASET_DIR = os.path.join(REPO_ROOT, "dataset")
 
 TEST_PATH_PATTERNS = [
     re.compile(r'^test/'),

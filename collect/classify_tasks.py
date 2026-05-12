@@ -13,7 +13,8 @@ import json
 import os
 import sys
 
-DATASET_DIR = "/home/sunzhongkai/disk/paddleswe/dataset"
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATASET_DIR = os.path.join(REPO_ROOT, "dataset")
 
 
 def classify_task(task_title: str, repo: str, has_code: bool, has_test: bool) -> tuple[str, str]:

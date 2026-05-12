@@ -12,8 +12,9 @@ import os
 import re
 import sys
 
-COMMUNITY_DIR = "/home/sunzhongkai/disk/paddleswe/collect/community/hackathon"
-DATASET_DIR = "/home/sunzhongkai/disk/paddleswe/dataset"
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+COMMUNITY_DIR = os.path.join(REPO_ROOT, "collect", "community", "hackathon")
+DATASET_DIR = os.path.join(REPO_ROOT, "dataset")
 
 # Mapping from edition to the markdown files that contain task descriptions
 EDITION_FILES = {

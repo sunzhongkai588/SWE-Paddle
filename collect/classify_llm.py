@@ -5,8 +5,10 @@ Based on manual review of all 133 instance titles and PR descriptions.
 """
 
 import json
+import os
 
-DATASET_DIR = "/home/sunzhongkai/disk/paddleswe/dataset"
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATASET_DIR = os.path.join(REPO_ROOT, "dataset")
 
 # Classification rules based on LLM judgment of each instance's pr_title/task_title:
 #
