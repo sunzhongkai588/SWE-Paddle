@@ -1,0 +1,5 @@
+collect/community/
+__pycache__/
+*.pyc
+.env
+CLAUDE.md
