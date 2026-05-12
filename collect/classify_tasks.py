@@ -78,7 +78,7 @@ def classify_task(task_title: str, repo: str, has_code: bool, has_test: bool) ->
 
 def main():
     input_file = "instances_6to9_raw.jsonl"
-    suffix = "_6to9"
+    suffix = ""
 
     args = sys.argv[1:]
     while args:

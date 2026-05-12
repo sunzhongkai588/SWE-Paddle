@@ -313,7 +313,7 @@ def main():
                 inst["problem_statement"] = inst.get("task_title", inst.get("pr_title", ""))
                 inst["problem_statement_minimal"] = inst["problem_statement"]
 
-        output_inst = os.path.join(DATASET_DIR, "instances_6to9.jsonl")
+        output_inst = os.path.join(DATASET_DIR, "instances.jsonl")
         with open(output_inst, "w") as f:
             for inst in instances:
                 f.write(json.dumps(inst, ensure_ascii=False) + "\n")

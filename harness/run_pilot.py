@@ -330,11 +330,15 @@ def _run_three_state_in_container(
     # PYTHONPATH prefix for pure-python overlay
     env_prefix = f"PYTHONPATH={python_overlay}:$PYTHONPATH " if python_overlay else ""
 
-    # Check if test files exist at base_commit (they may not for new files)
+    # Check which test files exist at base_commit
+    files_missing = []
     for tf in result.test_files:
         check = exec_in_container(container_id, ["test", "-f", f"{paddle_dir}/{tf}"])
         if check.returncode != 0:
+            files_missing.append(tf)
             log.info(f"  Test file {tf} does not exist at base_commit (new file)")
+
+    all_files_missing = len(files_missing) == len(result.test_files)
 
     quoted_test_files = " ".join(shlex.quote(tf) for tf in result.test_files)
     collect_cmd = f"cd {paddle_dir} && {env_prefix}python -m pytest --collect-only -q {quoted_test_files}"
@@ -345,10 +349,16 @@ def _run_three_state_in_container(
             if "::" in line and not line.startswith(("=", "-", "no tests", "ERROR")):
                 run_nodeids.add(line.strip())
         result.run_collect_status = "COLLECTED"
-    else:
-        # Collect failed — may mean test files don't exist at base_commit (expected for new tests)
-        log.info(f"  collect-only returned {r.returncode} (test files may not exist at base)")
+    elif all_files_missing:
+        # All test files are new — expected for feature tasks
+        log.info("  All test files are new at base_commit, collect failure expected")
         result.run_collect_status = "COLLECTED"
+    else:
+        # Some files exist but collect still failed — real error
+        result.run_collect_status = "COLLECT_FAIL"
+        result.failure_reason = "collect_fail"
+        log.error(f"  Base collect failed (files exist): {r.stderr[-200:]}")
+        return
 
     # Run baseline tests for PASS_TO_PASS (select up to 5 stable nodeids)
     baseline_nodeids = sorted(run_nodeids)[:5]
@@ -397,6 +407,7 @@ def _run_three_state_in_container(
         # Try full file as fallback only if run_nodeids was empty (new test file)
         if not run_nodeids:
             new_nodeids = sorted(test_nodeids)
+            result.test_nodeids = new_nodeids
             result.nodeids_source = "full_file"
         else:
             result.failure_reason = "no_new_nodeids"
@@ -449,8 +460,10 @@ def _run_three_state_in_container(
         result.build_mode = "incremental"
 
     # Run tests — expect PASS for consistently_failed nodeids
+    # Also track P2P stability across all runs
     fix_verification = sorted(consistently_failed) + [n for n in run_passed if n in test_nodeids]
     consistently_passed = set(consistently_failed)
+    consistently_passed_p2p = set(run_passed) & test_nodeids
     for run_idx in range(STABILITY_RUNS):
         quoted_fix = " ".join(shlex.quote(nid) for nid in fix_verification)
         run_cmd = f"cd {paddle_dir} && {env_prefix}python -m pytest -v --timeout=600 {quoted_fix}"
@@ -459,14 +472,15 @@ def _run_three_state_in_container(
         passed_in_run = {nid for nid in consistently_failed if f"{nid} PASSED" in r.stdout}
         consistently_passed &= passed_in_run
 
+        p2p_in_run = {nid for nid in run_passed if nid in test_nodeids and f"{nid} PASSED" in r.stdout}
+        consistently_passed_p2p &= p2p_in_run
+
     # FAIL_TO_PASS = nodeids that failed in Test state AND passed in Fix state
     f2p = sorted(consistently_failed & consistently_passed)
     if f2p:
         result.fix_status = "CONFIRMED_PASS"
         result.FAIL_TO_PASS = f2p
-        # Check PASS_TO_PASS
-        p2p = [nid for nid in run_passed if f"{nid} PASSED" in r.stdout]
-        result.PASS_TO_PASS = p2p
+        result.PASS_TO_PASS = sorted(consistently_passed_p2p)
         result.stability_consistent = True
     else:
         result.fix_status = "UNEXPECTED_FAIL"

@@ -114,7 +114,7 @@ def classify_by_llm(inst: dict) -> tuple[str, str]:
 
 
 def main():
-    with open(f"{DATASET_DIR}/instances_6to9.jsonl") as f:
+    with open(f"{DATASET_DIR}/instances.jsonl") as f:
         instances = [json.loads(line) for line in f]
 
     track_a, track_b, track_c, excluded = [], [], [], []
@@ -143,13 +143,13 @@ def main():
             for item in data:
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
-    write_jsonl(f"{DATASET_DIR}/track_a_bugfix_6to9.jsonl", track_a)
-    write_jsonl(f"{DATASET_DIR}/track_b_testgen_6to9.jsonl", track_b)
-    write_jsonl(f"{DATASET_DIR}/track_c_feature_6to9.jsonl", track_c)
-    write_jsonl(f"{DATASET_DIR}/excluded_6to9.jsonl", excluded)
+    write_jsonl(f"{DATASET_DIR}/track_a_bugfix.jsonl", track_a)
+    write_jsonl(f"{DATASET_DIR}/track_b_testgen.jsonl", track_b)
+    write_jsonl(f"{DATASET_DIR}/track_c_feature.jsonl", track_c)
+    write_jsonl(f"{DATASET_DIR}/excluded.jsonl", excluded)
 
     # Also update the main instances file with track info
-    write_jsonl(f"{DATASET_DIR}/instances_6to9.jsonl", track_a + track_b + track_c + excluded)
+    write_jsonl(f"{DATASET_DIR}/instances.jsonl", track_a + track_b + track_c + excluded)
 
     # Print summary
     import sys
