@@ -4,16 +4,16 @@
 
 基于飞桨黑客松 6th~9th 期任务（结构化描述 + merged PR），构建类 SWE-bench 的 Coding Agent Benchmark，覆盖 Bug Fix / Feature Impl 两个赛道。
 
-## 数据现状（2025-05-12 更新）
+## 数据现状（2025-05-13 更新）
 
 | 数据集 | 样本数 | 说明 |
 |--------|--------|------|
 | `tasks_6to9.jsonl` | 164 | 6th~9th 期已完成任务（含"完成任务"badge） |
 | `instances_6to9_raw.jsonl` | 133 | 原始爬取结果（含 FastDeploy，未清理） |
 | `instances.jsonl` | 89 | **权威数据集**：人工审核后，仅 Paddle 主框架 |
-| `track_a_bugfix.jsonl` | 10 | Bug Fix (0-Size/精度/fold/reshape 修复) |
-| `track_c_feature.jsonl` | 59 | Feature Impl (新增 API + 功能增强) |
-| `excluded.jsonl` | 20 | 排除（代码迁移/清理类 Track X） |
+| `track_a_bugfix.jsonl` | 10 | Bug Fix (0-Size/精度/fold/reshape 修复)，含 2 条需外部测试 |
+| `track_c_feature.jsonl` | 58 | Feature Impl (新增 API + 功能增强) |
+| `excluded.jsonl` | 21 | 排除（代码迁移/清理类 + 无效 patch） |
 
 ### 清理操作（2025-05-12）
 
@@ -23,12 +23,19 @@
 - 新增 3 条 9th 冲刺赛数据（#76387, #76873, #77103）
 - 全部条目添加 rfc_urls 字段（38 条有实际链接）
 
+### 清理操作（2025-05-13）
+
+- 移除 PR #65205 至 excluded（仅 1 行 docstring 改动，多 PR 任务尾巴，无评测价值）
+- 标记 PR #74863, #74854 为 `needs_external_test`（测试在外部仓库 PaddleAPITest）
+- 修复 `extract_problem_statement.py` 输出到 `instances_6to9_raw_enriched.jsonl`（不再覆盖权威数据）
+- 对齐 CLAUDE.md 快速上手与实际 pipeline
+
 ## 评测设计
 
 | Track | 输入 | 目标 | 评测指标 | 当前样本 |
 |-------|------|------|----------|----------|
-| **A: Bug Fix** | base_commit + test_patch(fail) + problem_statement | 生成 code_patch 让测试 pass | Pass@1 (F2P + P2P) | 10 |
-| **C: Feature Impl** | base_commit + test_patch(fail) + Interface 提示 | 实现 API 让测试 pass | Pass@1 (F2P + P2P) | 59 |
+| **A: Bug Fix** | base_commit + test_patch(fail) + problem_statement | 生成 code_patch 让测试 pass | Pass@1 (F2P + P2P) | 10 (2 需外部测试) |
+| **C: Feature Impl** | base_commit + test_patch(fail) + Interface 提示 | 实现 API 让测试 pass | Pass@1 (F2P + P2P) | 58 |
 
 ## 核心流程
 
