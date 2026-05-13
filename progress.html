@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PaddleSWE-Bench 数据建设进展</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #333; line-height: 1.6; }
+.container { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
+h1 { font-size: 2rem; margin-bottom: 8px; color: #1a1a2e; }
+.subtitle { color: #666; font-size: 1.05rem; margin-bottom: 36px; }
+.card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 28px; margin-bottom: 24px; }
+.card h2 { font-size: 1.2rem; color: #1a1a2e; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.card h2 .icon { font-size: 1.4rem; }
+
+/* Stats Grid */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; padding: 20px; color: #fff; text-align: center; }
+.stat-box.green { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: #1a1a2e; }
+.stat-box.orange { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #1a1a2e; }
+.stat-box.blue { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #1a1a2e; }
+.stat-box.red { background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%); color: #1a1a2e; }
+.stat-num { font-size: 2.2rem; font-weight: 700; }
+.stat-label { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; }
+
+/* Track Table */
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #eee; }
+th { background: #f8f9fb; font-weight: 600; font-size: 0.85rem; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+td { font-size: 0.95rem; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+.badge-a { background: #e3f2fd; color: #1565c0; }
+.badge-c { background: #e8f5e9; color: #2e7d32; }
+.badge-x { background: #fce4ec; color: #c62828; }
+
+/* Progress */
+.progress-section { margin-top: 8px; }
+.progress-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+.progress-item:last-child { border-bottom: none; }
+.progress-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: #fff; flex-shrink: 0; }
+.progress-icon.done { background: #4caf50; }
+.progress-icon.pending { background: #ff9800; }
+.progress-icon.blocked { background: #f44336; }
+.progress-text { flex: 1; font-size: 0.92rem; }
+.progress-tag { font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: #f0f0f0; color: #666; }
+
+/* Chart */
+.chart-container { display: flex; align-items: end; gap: 12px; height: 180px; padding: 20px 0; }
+.bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.bar { width: 48px; border-radius: 6px 6px 0 0; transition: height 0.6s ease; position: relative; }
+.bar-label { font-size: 0.75rem; color: #666; margin-top: 8px; text-align: center; }
+.bar-value { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 600; color: #333; }
+
+/* Pipeline */
+.pipeline { display: flex; align-items: center; gap: 0; flex-wrap: wrap; justify-content: center; margin: 16px 0; }
+.pipeline-node { background: #e8eaf6; border-radius: 8px; padding: 10px 16px; font-size: 0.82rem; text-align: center; white-space: nowrap; }
+.pipeline-node.active { background: #c8e6c9; border: 2px solid #4caf50; }
+.pipeline-node.blocked { background: #ffecb3; border: 2px solid #ff9800; }
+.pipeline-arrow { font-size: 1.2rem; color: #999; padding: 0 6px; }
+
+/* Timeline */
+.timeline { position: relative; padding-left: 24px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 4px; bottom: 4px; width: 2px; background: #ddd; }
+.timeline-item { position: relative; margin-bottom: 16px; }
+.timeline-item::before { content: ''; position: absolute; left: -20px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: #667eea; }
+.timeline-date { font-size: 0.78rem; color: #999; margin-bottom: 2px; }
+.timeline-text { font-size: 0.9rem; }
+
+/* Unique selling points */
+.usp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.usp-item { background: #f8f9fb; border-radius: 8px; padding: 14px; border-left: 3px solid #667eea; }
+.usp-item strong { font-size: 0.88rem; display: block; margin-bottom: 4px; }
+.usp-item span { font-size: 0.8rem; color: #666; }
+
+/* USP Detail */
+.usp-detail-item { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0; }
+.usp-detail-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.usp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.usp-num { width: 26px; height: 26px; border-radius: 50%; background: #667eea; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; flex-shrink: 0; }
+.usp-detail-item p { font-size: 0.9rem; color: #555; margin-top: 6px; line-height: 1.7; }
+.usp-detail-item a { color: #667eea; text-decoration: none; }
+.usp-detail-item a:hover { text-decoration: underline; }
+
+/* Examples */
+.example-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 16px; }
+.example-box { border-radius: 10px; padding: 18px; border: 1px solid #e8e8e8; }
+.example-box.example-a { background: #f8fbff; border-left: 4px solid #1565c0; }
+.example-box.example-c { background: #f8fdf8; border-left: 4px solid #2e7d32; }
+.example-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.example-id { font-size: 0.75rem; color: #999; font-family: monospace; }
+.example-title { font-size: 1rem; font-weight: 600; margin-bottom: 10px; }
+.example-title code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 0.9rem; }
+.example-desc p { font-size: 0.85rem; color: #555; margin-bottom: 6px; }
+.example-desc a { color: #667eea; text-decoration: none; }
+.example-desc a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>PaddleSWE-Bench</h1>
+  <p class="subtitle">基于飞桨黑客松 6th~9th 期数据构建的 Coding Agent Benchmark</p>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="stat-num">89</div>
+      <div class="stat-label">权威数据集总量</div>
+    </div>
+    <div class="stat-box green">
+      <div class="stat-num">10</div>
+      <div class="stat-label">Track A · Bug Fix</div>
+    </div>
+    <div class="stat-box blue">
+      <div class="stat-num">58</div>
+      <div class="stat-label">Track C · Feature</div>
+    </div>
+    <div class="stat-box orange">
+      <div class="stat-num">21</div>
+      <div class="stat-label">Excluded</div>
+    </div>
+  </div>
+
+  <!-- Data Distribution Chart -->
+  <div class="card">
+    <h2><span class="icon">📊</span> 数据分布</h2>
+    <div class="chart-container">
+      <div class="bar-group">
+        <div class="bar" style="height:140px; background: linear-gradient(180deg, #667eea, #764ba2);">
+          <span class="bar-value">164</span>
+        </div>
+        <div class="bar-label">任务总量<br><small>tasks_6to9</small></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar" style="height:113px; background: linear-gradient(180deg, #f093fb, #f5576c);">
+          <span class="bar-value">133</span>
+        </div>
+        <div class="bar-label">原始爬取<br><small>raw</small></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar" style="height:76px; background: linear-gradient(180deg, #4facfe, #00f2fe);">
+          <span class="bar-value">89</span>
+        </div>
+        <div class="bar-label">审核后<br><small>instances</small></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar" style="height:12px; background: linear-gradient(180deg, #43e97b, #38f9d7);">
+          <span class="bar-value">10</span>
+        </div>
+        <div class="bar-label">Bug Fix<br><small>Track A</small></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar" style="height:50px; background: linear-gradient(180deg, #fa709a, #fee140);">
+          <span class="bar-value">58</span>
+        </div>
+        <div class="bar-label">Feature<br><small>Track C</small></div>
+      </div>
+      <div class="bar-group">
+        <div class="bar" style="height:18px; background: linear-gradient(180deg, #a8edea, #fed6e3);">
+          <span class="bar-value">21</span>
+        </div>
+        <div class="bar-label">排除<br><small>Excluded</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pipeline -->
+  <div class="card">
+    <h2><span class="icon">🔗</span> 数据 Pipeline</h2>
+    <div class="pipeline">
+      <div class="pipeline-node active">GitHub Issues<br><small>5 个总 issue</small></div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-node active">爬取任务列表<br><small>164 tasks</small></div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-node active">Fetch PR Diff<br><small>133 instances</small></div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-node active">LLM 分类 + 审核<br><small>89 条权威数据</small></div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-node blocked">三次运行验证<br><small>⚠️ 需 GPU Docker</small></div>
+      <span class="pipeline-arrow">→</span>
+      <div class="pipeline-node">F2P/P2P 提取<br><small>最终 Benchmark</small></div>
+    </div>
+  </div>
+
+  <!-- Track Details -->
+  <div class="card">
+    <h2><span class="icon">🏷️</span> 评测赛道</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Track</th>
+          <th>输入</th>
+          <th>目标</th>
+          <th>指标</th>
+          <th>样本</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-a">A: Bug Fix</span></td>
+          <td>base_commit + test_patch(fail) + problem_statement</td>
+          <td>生成 code_patch 让测试 pass</td>
+          <td>Pass@1 (F2P+P2P)</td>
+          <td><strong>10</strong></td>
+          <td>2 条需外部测试</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-c">C: Feature</span></td>
+          <td>base_commit + test_patch(fail) + interface hint</td>
+          <td>实现 API 让测试 pass</td>
+          <td>Pass@1 (F2P+P2P)</td>
+          <td><strong>58</strong></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-x">X: Excluded</span></td>
+          <td colspan="4">代码迁移 / 清理 / 无效 patch / trivial 改动</td>
+          <td>21 条</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Progress -->
+  <div class="card">
+    <h2><span class="icon">✅</span> 建设进度</h2>
+    <div class="progress-section">
+      <div class="progress-item">
+        <div class="progress-icon done">✓</div>
+        <div class="progress-text">论文调研 (SWE-bench Pro / ABS / Compass / Multi-SWE)</div>
+        <span class="progress-tag">完成</span>
+      </div>
+      <div class="progress-item">
+        <div class="progress-icon done">✓</div>
+        <div class="progress-text">6th~9th 期数据爬取 + PR diff 获取</div>
+        <span class="progress-tag">完成</span>
+      </div>
+      <div class="progress-item">
+        <div class="progress-icon done">✓</div>
+        <div class="progress-text">problem_statement 从 community 仓库提取</div>
+        <span class="progress-tag">完成</span>
+      </div>
+      <div class="progress-item">
+        <div class="progress-icon done">✓</div>
+        <div class="progress-text">LLM-based 分类 + 人工审核</div>
+        <span class="progress-tag">完成</span>
+      </div>
+      <div class="progress-item">
+        <div class="progress-icon done">✓</div>
+        <div class="progress-text">数据清理 (FastDeploy / revert / docs / trivial patch 移除)</div>
+        <span class="progress-tag">完成</span>
+      </div>
+      <div class="progress-item">
+        <div class="progress-icon done">✓</div>
+        <div class="progress-text">Harness 验证框架代码 (三次运行逻辑)</div>
+        <span class="progress-tag">完成</span>
+      </div>
+      <div class="progress-item">
+        <div class="progress-icon done">✓</div>
+        <div class="progress-text">代码审查 4 轮 (Codex review) 全部修复</div>
+        <span class="progress-tag">完成</span>
+      </div>
+      <div class="progress-item">
+        <div class="progress-icon blocked">!</div>
+        <div class="progress-text"><strong>三次运行验证 → F2P/P2P 提取</strong> (需 GPU Docker)</div>
+        <span class="progress-tag" style="background:#fff3e0;color:#e65100;">阻塞</span>
+      </div>
+      <div class="progress-item">
+        <div class="progress-icon pending">○</div>
+        <div class="progress-text">Track C Interface 字段提取 (从 gold_patch 提取函数签名)</div>
+        <span class="progress-tag">待办</span>
+      </div>
+      <div class="progress-item">
+        <div class="progress-icon pending">○</div>
+        <div class="progress-text">质量审查 (去重、泄露检查、flaky 过滤)</div>
+        <span class="progress-tag">待办</span>
+      </div>
+      <div class="progress-item">
+        <div class="progress-icon pending">○</div>
+        <div class="progress-text">端到端 Pilot (选 3 个样本跑通全流程)</div>
+        <span class="progress-tag">待办</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Cleaning Timeline -->
+  <div class="card">
+    <h2><span class="icon">🕐</span> 清理时间线</h2>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-date">2025-05-12</div>
+        <div class="timeline-text">移除 42 条 FastDeploy + 5 条 revert/docs；修正 2 条 orphan fix；新增 3 条冲刺赛数据</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">2025-05-13</div>
+        <div class="timeline-text">移除 PR #65205 (trivial patch) 至 excluded；标记 #74863/#74854 需外部测试；修复 pipeline 覆盖 bug</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unique Selling Points -->
+  <div class="card">
+    <h2><span class="icon">💡</span> 独特卖点 (vs 现有 Benchmark)</h2>
+    <div class="usp-detail">
+      <div class="usp-detail-item">
+        <div class="usp-header">
+          <span class="usp-num">1</span>
+          <strong>唯一覆盖 CUDA Kernel 的 SWE-bench 类 Benchmark</strong>
+        </div>
+        <p>现有 SWE-bench / SWE-bench Pro / Multi-SWE 全部是纯 Python/JS/Java 项目。PaddleSWE-Bench 的 Track A 包含真实的 GPU kernel 修复（如 0-Size edge case、scatter assign 竞争条件），评测 Agent 对 C++/CUDA 代码的理解和修改能力。</p>
+      </div>
+      <div class="usp-detail-item">
+        <div class="usp-header">
+          <span class="usp-num">2</span>
+          <strong>RFC 驱动的结构化需求描述</strong>
+        </div>
+        <p>每个 Feature 任务都有配套的 <a href="https://github.com/PaddlePaddle/community/tree/master/rfcs/APIs" target="_blank">RFC 设计文档</a>，包含 API 签名、参数说明、验收标准、参考实现。这天然等价于 SWE-bench Pro 中人工编写的 requirement specification，但我们无需额外标注——黑客松流程本身就要求提交 RFC。</p>
+      </div>
+      <div class="usp-detail-item">
+        <div class="usp-header">
+          <span class="usp-num">3</span>
+          <strong>来源于真实研发需求</strong>
+        </div>
+        <p>数据不是人造 toy problem，而是飞桨框架的真实研发任务：API 缺失需要补全、算子精度需要修复、功能需要对齐 PyTorch。每个任务都经历了社区开发者实现 → CI 通过 → Reviewer 审核 → Merge 的完整流程，代表了工业级深度学习框架的真实复杂度。</p>
+      </div>
+      <div class="usp-detail-item">
+        <div class="usp-header">
+          <span class="usp-num">4</span>
+          <strong>数据污染风险极低</strong>
+        </div>
+        <p>中文社区产出 + PaddlePaddle 生态（非 PyTorch/TensorFlow 主流训练语料）。黑客松任务描述在 community 仓库的 markdown 中，不会出现在常见的代码预训练数据集里。Agent 必须真正理解需求而非记忆答案。</p>
+      </div>
+      <div class="usp-detail-item">
+        <div class="usp-header">
+          <span class="usp-num">5</span>
+          <strong>任务类型分类 + 差异化评测</strong>
+        </div>
+        <p>不像 SWE-bench 把所有任务混在一起报告单一 Pass@1。我们按 Bug Fix (Track A) 和 Feature Impl (Track C) 分别评测，避免"只会修 bug 不会写新功能"的 Agent 获得虚高分数。参考 SWE-Compass 的分类评测思路。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Examples -->
+  <div class="card">
+    <h2><span class="icon">📝</span> 样本示例</h2>
+    <div class="example-section">
+      <div class="example-box example-a">
+        <div class="example-header">
+          <span class="badge badge-a">Track A: Bug Fix</span>
+          <span class="example-id">PaddlePaddle__Paddle-70102</span>
+        </div>
+        <div class="example-title">BUG FIX <code>paddle.nn.functional.fold</code></div>
+        <div class="example-desc">
+          <p><strong>问题：</strong>fold 算子在特定输入 shape 下计算结果不正确</p>
+          <p><strong>修复：</strong>修改 3 个文件（kernel + Python 接口），+24/-8 行，附带 14 行测试 patch</p>
+          <p><strong>考察：</strong>Agent 需定位算子 bug 根因并修复，同时保证不引入 regression</p>
+        </div>
+      </div>
+      <div class="example-box example-a">
+        <div class="example-header">
+          <span class="badge badge-a">Track A: Bug Fix</span>
+          <span class="example-id">PaddlePaddle__Paddle-74863</span>
+        </div>
+        <div class="example-title">fix <code>paddle.index_sample</code> 0-Size</div>
+        <div class="example-desc">
+          <p><strong>问题：</strong>当 batch_size/input_length/index_length 为 0 时 CUDA kernel crash</p>
+          <p><strong>修复：</strong>在 GPU kernel 入口添加 0-size 提前 return，修改 2 个 .cu 文件，+9/-3 行</p>
+          <p><strong>考察：</strong>Agent 需理解 CUDA kernel 的边界条件处理</p>
+        </div>
+      </div>
+      <div class="example-box example-c">
+        <div class="example-header">
+          <span class="badge badge-c">Track C: Feature</span>
+          <span class="example-id">PaddlePaddle__Paddle-64519</span>
+        </div>
+        <div class="example-title">为 Paddle 新增 <code>cholesky_inverse</code> API</div>
+        <div class="example-desc">
+          <p><strong>需求：</strong>实现 paddle.linalg.cholesky_inverse，对称正定矩阵通过 Cholesky 分解求逆</p>
+          <p><strong>实现：</strong>5 个文件，+277 行（Python 实现 + C++ kernel 注册 + 单测 + 文档）</p>
+          <p><strong>RFC：</strong><a href="https://github.com/PaddlePaddle/community/pull/896" target="_blank">community/pull/896</a> — 包含 API 签名、参数定义、与 PyTorch 对齐说明</p>
+          <p><strong>考察：</strong>Agent 需根据 RFC 规范完整实现 API（前向/反向/注册/测试）</p>
+        </div>
+      </div>
+      <div class="example-box example-c">
+        <div class="example-header">
+          <span class="badge badge-c">Track C: Feature</span>
+          <span class="example-id">PaddlePaddle__Paddle-64684</span>
+        </div>
+        <div class="example-title">为 Paddle 新增 <code>cartesian_prod</code> API</div>
+        <div class="example-desc">
+          <p><strong>需求：</strong>实现 paddle.cartesian_prod，计算多个一维张量的笛卡尔积</p>
+          <p><strong>实现：</strong>7 个文件，+129 行（纯 Python 实现 + 单测）</p>
+          <p><strong>RFC：</strong><a href="https://github.com/PaddlePaddle/community/pull/914" target="_blank">community/pull/914</a></p>
+          <p><strong>考察：</strong>相对简单的 Python-only API 实现，适合评测基础能力</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p style="text-align:center; color:#999; font-size:0.8rem; margin-top:32px;">
+    PaddleSWE-Bench · Last updated: 2025-05-13 ·
+    <a href="https://github.com/sunzhongkai588/SWE-Paddle" style="color:#667eea;">GitHub Repo</a>
+  </p>
+</div>
+</body>
+</html>
